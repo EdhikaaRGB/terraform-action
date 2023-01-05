@@ -1,0 +1,55 @@
+name: "Terraform Deployments"
+on:
+  # Manual trigger
+  workflow_dispatch:
+  # If anything is pushed in this path then the workflow will trigger
+  push:
+    paths:
+      - '*/**'
+  pull_request:
+    branches: [ main ]
+defaults:
+  run:
+    shell: bash
+jobs:
+  terraform:
+  # matrix concept is used when we need to run the same job in multiple environments. For Iteration
+    name:   ${{matrix.runner}} - ${{ matrix.environment }}
+    runs-on: [ '${{ matrix.runner }}']
+    strategy:
+      max-parallel: 1
+      matrix:
+         include:
+           - environment: test
+             runner: ubuntu-latest
+           - environment: prod
+             runner: ubuntu-18.04
+    env:
+         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         AWS_DEFAULT_REGION: ap-south-1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1 #Terraform Default Action
+        with:
+          terraform_wrapper: false
+      - name: Terraform Init
+        id: init
+        run: |
+           rm -rf .terraform
+           terraform init -backend-config=${{ matrix.environment }}/backend.tfvars -upgrade=true -no-color -input=false
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -input=false -var-file=${{ matrix.environment }}/terraform.tfvars -no-color
+      - name: Terraform Apply
+      #If the change is in the master Branch
+        if: github.ref == 'refs/heads/main'
+        id: apply
+        run: terraform apply -auto-approve -input=false -var-file=${{ matrix.environment }}/terraform.tfvars
+      - name: Terraform destroy
+      # If there is a new push in the destroy branch then this lines will be executed
+        if: github.ref == 'refs/heads/destroy'
+        id: destroy
+        run: terraform destroy -auto-approve -input=false -var-file=${{ matrix.environment }}/terraform.tfvars
+  
