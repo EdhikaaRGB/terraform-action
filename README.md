@@ -2,7 +2,7 @@
 
 1. This document will provide you all the details how to configure the github actions to trigger the terraform deployment. 
 
-
+Destroy
 
 ## Basics of Github actions in the workflow
 
