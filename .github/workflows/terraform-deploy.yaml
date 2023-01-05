@@ -5,7 +5,7 @@ on:
   # If anything is pushed in this path then the workflow will trigger
   push:
  
-    branches: [ main ]
+    branches: [ destroy ]
 defaults:
   run:
     shell: bash
