@@ -4,9 +4,7 @@ on:
   workflow_dispatch:
   # If anything is pushed in this path then the workflow will trigger
   push:
-    paths:
-      - '*/**'
-  pull_request:
+ 
     branches: [ main ]
 defaults:
   run:
